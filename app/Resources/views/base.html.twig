@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+        {% block head %}
+           	<title>TxtyJukeBox</title>
+    		<!-- Meta -->
+    		<meta charset="utf-8">
+    		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    		<meta name="description" content="">
+    		<meta name="author" content="">  
+
+            <link rel="icon" type="image/png" href="{{ asset('/bundles/app/images/set5favicon.png') }}">  
+    		 
+    		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    		<!--[if lt IE 9]>
+      		<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      		<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    		<![endif]-->
+        {% endblock %}
+
+        {% block stylesheets %}
+            <link href='http://fonts.googleapis.com/css?family=Lato:300,400,300italic,400italic' rel='stylesheet' type='text/css'>
+    		<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'> 
+    		<!-- Global CSS -->
+    		<link href="{{ asset('/bundles/app/css/bootstrap.min.css') }}" rel="stylesheet" />
+    		<!-- Plugins CSS -->    
+    		<link href="{{ asset('/bundles/app/css/font-awesome.css') }}" rel="stylesheet" />
+    		<!-- Theme CSS -->  
+    		<link href="{{ asset('/bundles/app/css/templatestyles.css') }}" rel="stylesheet" />  
+            <link href="{{ asset('/bundles/app/css/jquery-ui.css') }}" rel="stylesheet" /> 
+            <link href="{{ asset('/bundles/app/css/jquery-ui.theme.css') }}" rel="stylesheet" /> 
+            <link href="{{ asset('/bundles/app/css/jquery-ui-timepicker-addon.css') }}" rel="stylesheet" />  
+            <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+            <link href="{{ asset('/bundles/app/css/main.css') }}" rel="stylesheet" />
+        {% endblock %}
+
+        {% block javascripts %}
+       		<script type="text/javascript" src="{{ asset('/bundles/app/js/jquery-1.11.1.min.js') }}"></script>
+   			<script type="text/javascript" src="{{ asset('/bundles/app/js/jquery-migrate-1.2.1.min.js') }}"></script>
+    		<script type="text/javascript" src="{{ asset('/bundles/app/js/jquery.easing.1.3.js') }}"></script>
+    		<script type="text/javascript" src="{{ asset('/bundles/app/js/jquery.scrollTo.min.js') }}"></script>
+    		<script type="text/javascript" src="{{ asset('/bundles/app/js/underscore-min.js') }}"></script>
+    		<script type="text/javascript" src="{{ asset('/bundles/app/js/bootstrap.min.js') }}"></script>
+    		<script type="text/javascript" src="{{ asset('/bundles/app/js/prism.js') }}"></script>
+    		<script type="text/javascript" src="{{ asset('/bundles/app/js/main.js') }}"></script> 
+            <script type="text/javascript" src="{{ asset('/bundles/app/js/jquery-ui.js') }}"></script>
+            <script type="text/javascript" src="{{ asset('/bundles/app/js/jquery-ui-timepicker-addon.js') }}"></script>
+    		
+    		{% if loadSender is defined %}
+                <script type="text/javascript" src="//www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
+            {% endif %}
+                                                       
+        {% endblock %}
+
+    </head>
+    <body class="jukebox-body {{ onHomepage is defined and onHomepage ? 'homepage' : '' }}" data-spy="scroll">
+    	
+        <div class="container-full">
+        {% block navbar%}
+        
+    		<!-- ******HEADER****** --> 
+    
+    		<header id="header" class="header {{ onHomepage is defined and onHomepage ? '' : 'navbar-fixed-top' }}">  
+        		<div class="container">            
+            		<h1 class="logo pull-left">
+                	<a href="{{url('homepage')}}">
+                    	<span class="logo-title"><input type ="image" src="{{ asset('/bundles/app/images/logo_noconsulting.png') }}"></span>
+                	</a>
+            		</h1><!--//logo-->              
+            		<nav id="main-nav" class="main-nav navbar-right" role="navigation">
+                		<div class="navbar-header">
+                    		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-collapse">
+                        		<span class="sr-only">Toggle navigation</span>
+                        		<span class="icon-bar"></span>
+                        		<span class="icon-bar"></span>
+                        		<span class="icon-bar"></span>
+                    		</button><!--//nav-toggle-->
+                		</div><!--//navbar-header-->            
+                		<div class="navbar-collapse collapse" id="navbar-collapse">
+                		{% set currentPath = app.request.uri %}
+                 
+                    		<ul class="nav navbar-nav">
+                    			{% if is_granted('ROLE_USER') %}                                	
+                                	<li class="nav-item"><a href="{{ path('fos_user_security_logout') }}">Logout</a></li>
+                                {% endif %}
+                                
+                            	{% if onHomepage is defined and onHomepage == true %}
+	                    			<li class="active nav-item sr-only"><a class="scrollto" href="#promo">Home</a></li>
+	                        		<li class="nav-item"><a class="scrollto" href="#about">About</a></li>
+	                        		<li class="nav-item"><a class="scrollto" href="#features">Testimonials</a></li>
+	                        		<li class="nav-item"><a class="scrollto" href="#docs">Get Started</a></li>
+	                            	<li class ="nav-item last"><a href="{{ path('fos_user_security_login') }}">{{ 'layout.login'|trans({}, 'FOSUserBundle') }}</a></li>
+                            	{% endif %}
+                           </ul><!--//nav-->
+                		</div><!--//navabr-collapse-->
+            		</nav><!--//main-nav-->
+        		</div>
+    		</header><!--//header-->
+        {% endblock %}
+        {% block content %}{% endblock %}
+        </div>
+    </body>
+</html>

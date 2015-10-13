@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+	{% block content %}
+      <section class='newevent offset-header'>
+        <div class ="container">
+            <div class="row">
+        		  <div class="col-lg-12 text-center v-center">
+          			<h1>
+          				Schedule Event
+          			</h1>
+          		</div>
+            </div>
+        </div>
+
+        <div class ="container">
+          <div class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+          			<div class="panel-body">  
+          				<form accept-charset="UTF-8" role="form" class="col-lg-12" action="" method ="post">
+                    {{ form_widget(form)}}
+          				</form>
+          			</div>
+        		</div>
+            <div class="col-md-4"></div>
+
+      		</div> 
+      		<!-- /row -->
+        </div>
+        </section> 
+        <script type="text/javascript">
+
+          $('#new_event_form_startTime').datetimepicker({
+            timeformat: "hh:mm tt"
+            });
+
+        </script>         
+	{% endblock %}	

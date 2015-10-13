@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Chrome Bell: Receiver</title>
+    <link rel="icon" type="image/png" href="{{ asset('/bundles/app/images/set5favicon.png') }}"> 
+
+    <!-- Latest compiled and minified CSS -->
+    <link href="{{ asset('/bundles/app/css/bootstrap.min.css') }}" rel="stylesheet" />
+    <link href="{{ asset('/bundles/app/css/text.css') }}" rel="stylesheet" />
+    <link href="{{ asset('/bundles/app/css/jukebox.css') }}" rel="stylesheet" />
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    
+    {% if test == 0 %}
+        <script src="https://www.gstatic.com/cast/sdk/libs/receiver/2.0.0/cast_receiver.js"></script>        
+    {% endif %}
+
+
+    <script type="text/javascript" src="{{ asset('/bundles/app/js/bootstrap.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('/bundles/app/js/underscore-min.js') }}"></script>
+</head>
+<body class="loading">
+
+<div class="loading-banner">
+    <div class="row">
+		<div class="col-md-12">
+			<div class="progress-container text-center">
+				<div class="progress">
+					<div class="progress-bar progress-bar-info progress-bar-striped" role="progressbar" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100" style="width: 0%"></div>            					
+				</div>
+				<div class="progress-message hidden">Sorry! Things are taking longer than usual to load.</div>
+			</div>
+		</div>
+    </div>           
+</div>
+
+
+<div class="header-wrapper">
+    <div class="container-fluid header-container" id="header"></div>
+</div>
+<div class="body-container container-fluid">
+    <div class="col-md-3 left-container">
+        <div class="help-container" id="help"></div>
+        
+        <div class="play-list-container">
+            <h3 class="header">Playlist</h3>
+            <div id="playlist"></div>
+         </div>
+    </div>
+    <div class="col-md-9 player-iframe-container">
+        <div id="playerContainer" class="text-center">
+            <h3>It looks like nothing is queued.</h3>
+        </div>
+    </div>
+</div>
+
+<script type="text/template" id="helpTemplate">
+  <ul class="">
+    <li>Text song requests to <%= event.number %></li> 
+    <li>Send "#name Your Name" to set a nickname</li>
+    <li>Admins can text: "#skip", "#fullscreen", "#pause", "#play", "#block Number To Block", "#who Keyword"</li>
+  </ul>
+  
+  <% if(event.isDemo){ %>
+    <div class="demo-banner text-center">
+        This is a DEMO event so you WILL NOT receive a SMS confirmation.
+    </div>
+  <% } %>
+</script>
+
+
+
+<script type="text/template" id="headerTemplate">
+    <div class="col-md-4">
+        <h1 class="title"><%= event.name %></h1>
+        <h2 class="sub-title"><%= event.quote %></h2>
+    </div>
+    <div class="col-md-5">
+
+    </div>
+    <div class="col-md-3 text-right">
+        <h3 class="textnum">Text to: <span><%= event.number %></span></h3>
+    </div>
+</script>
+
+<script type="text/template" id="playlistTemplate">
+    
+    <ul class="list list-unstyled">
+
+        <% _.forEach(videos, function(el){ %>
+            <li class='<%= getCssClass(el) %> playlist-element'>
+                <span class="from"><%= el.displayName %>:</span>
+                <span class="keyword"><%= el.keyword %></span>
+                <span class="time"><%= el.at %></span>
+            </li>
+        <% }); %>
+
+    </ul>
+
+</script>
+
+<script>
+    var completionPercentage = 0;
+    var eventToRender = null;
+    var pingedAt = null;
+
+    var runningSongList = [];
+    var queuedVideos = [];
+    var commandWords = [];
+    var currentIndex = 0;
+    var isSongAvailable = false;
+
+    var player = null;
+
+    var playlistTemplate = _.template( $("#playlistTemplate").html() );    
+
+    function formatplaylist(){
+        $(".from").width('20%');
+        $(".from").css({"overflow": "hidden"});
+    }
+
+    // Used to render the playlist HTML
+    function updatePlaylist(){
+        var lst = [];
+        // Run through the playlist, if you hit a "skip" mark the next song as skipped
+        // Otherwise, just add the song to the temporary list
+        for(var i = 0; i < queuedVideos.length; i++){            
+            if(queuedVideos[i].keyword == "#skip"){ 
+                if(i < queuedVideos.length - 1){
+                    queuedVideos[i + 1].skipped = true;
+                }
+            }else{
+                lst.push(queuedVideos[i]);
+            }            
+        }
+        
+        // Helper function to figure out what CSS class the <li> needs
+        // A song will be played AND skipped if the queue has moved past it
+        var getCssClass = function(song){
+            var css = [];
+            
+            if(song.played){
+                css.push("played");
+            }
+            
+            if(song.skipped){
+                css.push("skipped");
+            }
+            
+            if(song.playing){
+                css.push("playing");
+            }
+            
+            return css.join(" ");
+        };
+        
+        // Reverse the list so newest appears first
+        lst.reverse();
+        
+        // Render the HTML using the template
+        //console.log(lst);
+        $("#playlist").html(playlistTemplate({videos: lst, getCssClass: getCssClass}));             
+    }
+    
+    // Toggles between fullscreen and not
+    function toggleFullScreen(){
+        
+        var h = $(".header-wrapper").height();
+        
+        if( $("body").hasClass("full-screen") ){
+            $("body").removeClass("full-screen");
+
+            $(".player-iframe-container").animate({"width": "75%"}, function(){
+	            $(".body-container").animate({"margin-top": 30}, 1000);
+	            $(".player-iframe-container").animate({"padding-left": 15, "padding-right": 15}, 1000);
+	            
+	            $(".left-container").animate({"margin-left": "0%"}, 1000);
+	            $(".header-wrapper").animate({"margin-top": 0}, 1000);
+            });
+            
+        }else{
+            $("body").addClass("full-screen");
+                        
+            $(".body-container").animate({"margin-top": 0}, 1000);                        
+            $(".left-container").animate({"margin-left": "-25%"}, 1000);
+            $(".header-wrapper").animate({"margin-top": -h}, 1000);
+            
+            $("#playerContainer").animate({height: window.innerHeight});
+            $(".player-iframe-container").css("width", "75%");
+            $(".player-iframe-container").animate({"padding-left": 0, "padding-right": 0, height: window.innerHeight}, 1000, function(){
+                $(".player-iframe-container").animate({"width": "100%"});
+            });
+        }
+    }
+    
+    //Update the nickname of the eventuser for a song
+    function changeName(songObj, newname){
+
+    	for(i = 0; i < queuedVideos.length; i++ ){
+    		if(queuedVideos[i].sender == songObj.sender){
+    			queuedVideos[i].displayName = newname;
+    		}
+    	}
+
+        updatePlaylist();
+    }
+    
+    // Update songObj to be played (and not playing)
+    function setSongToPlayed(songObj){     
+        songObj.played = true;
+        songObj.playing = false;
+        
+        $.post("{{ url("update_song") }}", { id: songObj.id });        
+    }
+    
+    //Udpate songObj to be skipped
+      function setSongToSkipped(songObj){        
+        songObj.skipped = true;
+        
+        $.post("{{ url("update_song") }}", { id: songObj.id });        
+    }
+    
+    
+    // Called once a video finishes playing
+    function handleNextVideo(){
+    
+        // If we're at the end of the list then there's nothing to do but say there are no more songs available
+        if(currentIndex > queuedVideos.length - 1 && currentIndex != 0){
+            //setSongToPlayed( queuedVideos[currentIndex] - 1 );
+            //currentIndex += 1;
+            isSongAvailable = false;
+            if(player){
+                player.stopVideo();
+            }
+            return;
+        }
+        
+        // If this keyword has no videoId just skip it
+        if(queuedVideos[currentIndex]){
+            if(!queuedVideos[currentIndex].videoId){
+                setSongToPlayed( queuedVideos[currentIndex] );
+                currentIndex += 1;
+
+                handleNextVideo();
+            
+                return;
+            }
+        }
+        
+        // console.log("Loading: " + queuedVideos[currentIndex].keyword + " " + queuedVideos[currentIndex].videoId);
+        if(queuedVideos[currentIndex]){
+            queuedVideos[currentIndex].playing = true;
+        }
+        
+        // If we haven't constructed a player yet do that, 
+        // otherwise just load the video at currentIndex
+        if(player == null && queuedVideos[currentIndex]){
+            
+            var height = $("body").height() - $(".header-wrapper").height() - 60;
+
+            //Using this height to set a max height for the playlist container that matches the player
+            $(".play-list-container").css({"overflow": "hidden", "max-height": height});
+            $(".header").css({"padding-right": "15px", "padding-Top": "15px"});
+            $("#playlist").css({"width": "105%", "max-height": height, "overflow": "auto", "padding-right": "10px"});
+            
+            player = new YT.Player('playerContainer', {
+                height: height,
+                width: '100%',
+                videoId: queuedVideos[currentIndex].videoId,
+                playerVars: {'autoplay': 1, 'controls': 0},
+                events: {'onStateChange': onPlayerStateChange}
+            });
+            
+        }else{
+            if(queuedVideos[currentIndex]){
+                player.loadVideoById( queuedVideos[currentIndex].videoId);
+            }
+       }
+        
+        // Re-render the playlist
+        updatePlaylist();        
+    }
+
+    function onPlayerStateChange(event){
+        // If we get an "ended" event, run the nextVideo logic
+        if( event.data == YT.PlayerState.ENDED ){
+            nextVideo();
+        }
+    }
+    
+    //  Mark the song as played and queue the next video
+    function nextVideo(){
+        console.log(currentIndex);
+        if(currentIndex <= queuedVideos.length - 1){
+            setSongToPlayed( queuedVideos[currentIndex] );
+            currentIndex += 1;
+            handleNextVideo();
+        }
+    }
+    
+    // Update function to be called periodically
+    function updateEvents(){
+
+        var found = false;
+        // Get any keywords that have been submitted since our last update
+        $.getJSON("{{url("event_song_list")}}", {id: eventToRender, time: pingedAt})
+         .then(function(data){
+
+            var list = [];
+            var tempCommand;
+            var matches = 0;
+
+            if(runningSongList.length == 0){
+                list = data.list;
+                runningSongList = _.filter(data.list, function(e){return e.isSearchable});
+            }
+            else{
+                var temp = data.list;
+                for(var i = 0; i < temp.length; i++){
+                    tempCommand = temp[i];
+                    matches = 0;
+                    for(var j = 0; j < runningSongList.length; j++){
+                        if(runningSongList[j].id == temp[i].id){
+                            found == true;
+                            matches++;
+                            break;
+                        }
+                    }
+                    if(matches == 0){
+                        list.push(tempCommand);
+
+                        if(tempCommand.isSearchable){
+                            runningSongList.push(tempCommand);
+                        }
+                    }     
+                }
+            }
+
+            pingedAt = null; //This pingedat changed
+            
+            // Check if we'd previously run out of videos to play
+            //var wasStopped = currentIndex > queuedVideos.length - 1;
+                        
+            // Seperate out what we want to search vs. control words
+            var searchableKeywords = _.filter(list, function(e){return e.isSearchable});
+            var controlWords = _.filter(list, function(e){return !e.isSearchable}); 
+
+            // Add anything that comes back to the queue and 
+            // if we'd run out of videos before restart the player
+
+            addVideosToQueue(searchableKeywords).then(function(){
+
+            //When there was nothing on the queue and something gets added
+                if(isSongAvailable == false && searchableKeywords.length > 0){
+                    isSongAvailable = true;
+                    handleNextVideo();
+                }
+                
+                // After the video searches complete, process the control words
+                for(var i = 0; i < controlWords.length; i++){
+                	if(!controlWords[i].played){
+                        var control = controlWords[i].keyword;
+                        var pieces = controlWords[i].keyword.split(" ");
+
+                        switch(pieces[0]){ 
+                            case "#skip":
+                                nextVideo();
+                            break;
+                            case "#play":
+                                player.playVideo();
+                            break;
+                            case "#pause":
+                                player.pauseVideo();
+                            break;
+                            case "#fullscreen":
+                                toggleFullScreen();
+                            break;
+                            case "#name":
+                                var name = pieces.slice(1).join(" ");
+                    	  	    changeName(controlWords[i], name);
+                            break;
+                            default: break;
+                        }
+                        setSongToPlayed(controlWords[i]);
+                    }
+                }
+                
+                window.setTimeout(updateEvents, 3000);
+
+            });
+            
+        }).fail(function(){
+            updateEvents();
+        });
+        
+    }    
+    
+    // Search YouTube for a keyword and "resolve" the promise when the search is complete
+    function searchYoutube(keyword){
+        var df = $.Deferred();
+        var request = gapi.client.youtube.search.list({q: keyword, videoEmbeddable: true, part: 'snippet', type: 'video'});
+        
+        request.execute(function(response) {  
+            var val = response.result.items.length ? response.result.items[0].id.videoId : null;
+            df.resolve(val);
+        });
+
+        return df.promise();
+    }    
+    
+    // Helper function to set the "at" on the songs to something readable
+    function addFormattedTimeToList( searchObj ){        
+        
+        var d = new Date( searchObj.at );
+        var h, m;
+        
+        h = d.getHours();
+        m = d.getMinutes();
+
+        var ampm = h >= 12 ? 'pm' : 'am';
+
+        h = h % 12;
+        h = h ? h : 12; // the hour '0' should be '12'
+
+        m = m < 10 ? '0'+ m : m;
+
+        //searchObj.playing = false;
+        searchObj.at = h + ":" + m + ampm;
+        
+        return searchObj;
+    }    
+
+    // Searches YouTube for a list of keywords and adds them to the queue
+    function addVideosToQueue(videoList){
+        var df = $.Deferred();
+                
+        // Go through every keyword and fire off a YouTube search
+        videoList = _.map(videoList, function(el){            
+            // When the search completes, set the videoId on the element
+            el.df = searchYoutube(el.keyword)
+                    .then(function(videoId){ el.videoId = videoId; });
+            
+            return el;
+        });
+        
+        // Wait for all of the searches to complete 
+        // and then copy the updated keywords onto the master list
+        $.when.apply(null, _.pluck(videoList, "df")).then(function(){
+            
+            queuedVideos = queuedVideos.concat( _.map(videoList, addFormattedTimeToList) );
+            updatePlaylist();
+            df.resolve();
+        });
+        
+        // If there's nothing to search mark the promise resolved immedietely
+        if(videoList.length == 0){
+            df.resolve();
+        }        
+        
+        return df.promise();
+    }
+    
+    // Use these 3 to track when everything loads 
+    var onYoutubeReady = $.Deferred();
+    var onYoutubeIframeReady = $.Deferred();
+    var onEventJsonReady = $.Deferred();
+    
+    function updateProgressBar(){
+        completionPercentage = completionPercentage + 33.3;
+        $('.progress-bar').css('width', completionPercentage +'%').attr('aria-valuenow', completionPercentage);
+    }
+
+    // Automatically called when the Youtube iframe loads
+    function onYouTubeIframeAPIReady(){
+        updateProgressBar();
+        onYoutubeIframeReady.resolve.apply(null, arguments);
+        
+    }
+    
+    // Called when the Google library loads    
+    function init(){
+        gapi.client.setApiKey("AIzaSyBpDjO4BtsuNJNou_ICN6UUMi5r2G6Nthw");
+        gapi.client.load('youtube', 'v3', function(){
+            updateProgressBar();
+            onYoutubeReady.resolve.apply(null, arguments);
+
+        });
+    }
+           
+    // $.when is a jQuery (https://api.jquery.com/jquery.when/) helper function to wait for a series of promises
+    // Basically, the "then" gets called when all 3 of the above complete
+    $.when(onYoutubeReady, onYoutubeIframeReady, onEventJsonReady).then(function(yt, yi, eventInfo){
+        
+        // Start the timer and render the header
+        pingedAt = null; //THis pingedat changed (new Date()).getTime();
+        var template = _.template( $("#headerTemplate").text() );
+        $("#header").html( template({event: eventInfo}) );
+        $("#help").html( _.template($("#helpTemplate").text())({event: eventInfo}) );
+        
+        $("body").removeClass("loading");                
+        
+        // _.filter (http://underscorejs.org/#filter) is an underscore.js 
+        // function to return only elements that return true for the function
+        // _.map passes every element in the list through "callback",  addFormattedTimeToList in this case
+        
+        // So here we're grabbing everything that's been played, setting the createdAt, and then sticking it on the video list.
+        var searchableKeywords = _.filter(eventInfo.keywords, function(e){return e.isSearchable});
+        queuedVideos = _.map(_.filter(searchableKeywords, function(e){return e.played;}), addFormattedTimeToList );  
+
+        //keeping a real time list of all songs on the queue
+        runningSongList = searchableKeywords;
+        
+        // Bump the currentIndex to the length of the array since everything has been played
+        // Pull off the "rest" of the list since it hasn't been played yet
+        var rest = [];
+        if(queuedVideos.length > 0){
+        	currentIndex = queuedVideos.length - 1;
+        	rest = searchableKeywords.slice(currentIndex + 1);
+        }else{
+            currentIndex = 0;
+            rest = searchableKeywords;
+        }
+                
+        // Search YouTube for the list of keywords, add them to the queue, and start updating events once that's done 
+        addVideosToQueue(rest).then(function(){ 
+            if(rest.length > 0){
+                isSongAvailable = true;
+            }
+            handleNextVideo(); 
+            updateEvents();
+        });
+
+    });
+    
+    function setEventId(id){
+        eventToRender = id;
+        // Same JSON call to snag the event info
+        $.getJSON("{{ url("event_info") }}", {id: eventToRender}, function(event){
+            updateProgressBar();
+            onEventJsonReady.resolve(event);
+        });     
+    }
+
+    setTimeout(function(){
+        $('.progress-message').removeClass("hidden");
+    }, 3000);
+
+    setTimeout(function(){
+        if(onYoutubeReady.state() != 'resolved' ||
+           onYoutubeIframeReady.state() != 'resolved' ||
+           onEventJsonReady.state() != 'resolved'){
+                document.location.reload(true);
+        }
+    }, 5000);
+
+    {% if test != 1 %}
+        window.castReceiverManager = cast.receiver.CastReceiverManager.getInstance();
+        window.messageBus = window.castReceiverManager.getCastMessageBus('urn:x-cast:com.setfive.jukebox');
+        window.castReceiverManager.start({statusText: "Application is starting"});
+        
+        window.messageBus.onMessage = function(event){            
+            window.castReceiverManager.setApplicationState("We recieved an event to play!");                                                           
+            var parsedMessage = JSON.parse(event.data);
+            setEventId(parsedMessage.data);               
+        };
+    {% else %}
+       setEventId({{ eventId }});
+    {% endif %}
+  
+</script>
+
+<script src="https://apis.google.com/js/client.js?onload=init"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
+
+</body>
+</html>

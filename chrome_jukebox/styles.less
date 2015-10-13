@@ -1,0 +1,97 @@
+body {
+  font-family: 'Open Sans', sans-serif;
+  background: #fff;
+  min-height: 100vh;
+  
+  &.loading {
+    
+    .loading-banner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+    }
+    
+    .header-wrapper, .body-container {
+      display: none;
+    }
+  }
+}
+
+.sender-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+.loading-banner {
+  display: none;
+}
+
+.header-wrapper {
+  
+  background-color: #ECF0F1;
+  border-bottom: 2px solid #ccc;
+     
+  .title {
+    margin-bottom: 5px;
+    color: #374D63;
+    font-weight: bold;
+  }
+  
+  .sub-title {
+    margin-top: 10px;
+    font-size: 25px;
+    color: #374D63;
+    font-weight: bold;
+  }
+  
+  .textnum {
+    color: #E74C3C;
+    span {
+      font-weight: bold;
+    }  
+  }      
+}
+
+.body-container {
+  background-color: #fafafa;
+  margin-top: 30px;
+  
+  .guest-list-container {
+  
+    .header {
+      background-color: #374D63;
+      color: #fafafa;
+      margin: 0;
+      padding: 10px;
+    }
+    
+    li {
+      padding: 15px 10px;
+      background-color: #ECF0F1;
+      color: #374D63;
+      border-bottom: 1px solid #fff;
+      
+      &:last-child {
+        border: 0;      
+      }
+        
+      &.played {
+        opacity: .4;
+      }
+          
+      .from {
+        font-weight: bold;      
+      }
+      
+      .time {
+        float: right;
+        color: #666;
+      }
+    }
+       
+  }
+  
+}

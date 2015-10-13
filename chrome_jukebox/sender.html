@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Chrome Bell: Sender</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>       
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script> 
+    <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>   
+       
+  </head>
+  <body>
+  
+    <div class="sender-container">
+      <a href="#" id="startSession" class="btn btn-primary">Start Session</a>
+    </div>
+ 
+<script type="text/javascript">
+var applicationID = '5E23B003';
+var namespace = 'urn:x-cast:com.setfive.jukebox';
+var session = null;
+
+if (!chrome.cast || !chrome.cast.isAvailable) {
+    setTimeout(initializeCastApi, 1000);
+}
+  
+function initializeCastApi() {
+    var sessionRequest = new chrome.cast.SessionRequest(applicationID);
+    var apiConfig = new chrome.cast.ApiConfig(sessionRequest, sessionListener, receiverListener);
+    chrome.cast.initialize(apiConfig, null, onError);
+};
+
+function onError(e){
+    console.log(e);
+}
+
+function receiverListener(e) {
+    console.log(e);
+}
+
+function sessionListener(e) {
+    session = e;
+    session.addUpdateListener(sessionUpdateListener);  
+    session.addMessageListener(namespace, receiverMessage);
+}
+
+function sessionUpdateListener(isAlive) {
+  var message = isAlive ? 'Session Updated' : 'Session Removed';
+  message += ': ' + session.sessionId;  
+  if (!isAlive) {
+    session = null;
+  }
+}
+
+$(document).ready(function(){
+   
+    $("#startSession").click(function(){
+        chrome.cast.requestSession(function(e){ 
+            session = e; 
+        });
+        return false;
+    });
+   
+});
+</script>
+
+  </body>  
+  </html>

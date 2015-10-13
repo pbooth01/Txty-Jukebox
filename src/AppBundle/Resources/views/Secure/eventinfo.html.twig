@@ -1,0 +1,264 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+	<section class='eventinfo offset-header'>
+	 	 
+	   <div class="container">
+	     <div class="event-info-header">            
+	       <div class="row">	           
+	           <div class="col-md-7">
+	               <div class="inner">
+		               <ul class="list-unstyled list-inline">
+		                   <li><h3>{{event.eventname}}:</h3></li>
+		                   <li class="quote">{{event.quote}}</li>
+		               </ul>
+			           <div class="time">
+			              {{ event.startTime.format('M. jS') }} 
+			              from {{ event.startTime.format('g:ia') }} to {{ event.endTime.format('g:ia') }}
+			           </div>
+			        </div>
+		       </div>
+		       <div class="col-md-5 text-right">
+		          <div class="inner">
+			          <ul class="list-unstyled list-inline">
+			              <li>
+			                  <a class="btn btn-sm btn-default" href="#"><span class="glyphicon glyphicon-question-sign"></span></a>
+			              </li>
+			              <li>
+			                  <a class="btn btn-sm btn-default" href="{{url('jukebox_player', {'eventId': event.id, 'test': 1})}}">Launch Player</a>
+			              </li>
+			              <li id="chromecastLauncher">
+			                  <a class="btn btn-sm btn-primary" id="startSession" href="#" >Launch On Chromecast!</a>
+			              </li>
+			          </ul>
+			          <ul class="list-unstyled list-inline last">
+			             <li><strong>Text to:</strong>{{event.TwilioNumber}}</li>
+			             <li>Admin #: {{event.HostNumber}}</li>	          
+			          </ul>			          
+			      </div>
+		       </div>
+	       </div>
+	   </div>
+	</div>	     
+	
+	<div class="container margin-top">       
+	   <div class="row">
+	       <div class="col-md-12">
+	           
+              <div class="panel panel-default">
+                  <div class="panel-heading">Songs on queue (updates automatically)</div>
+                    <div class="panel-body">
+                        <div id="playlist"></div>  
+	               </div>
+	           </div>
+	           
+	       </div>	   
+	   </div>
+	</div>            
+	           
+  </section>        
+
+        <script type="text/template" id="playlistTemplate">
+            <ul class="list list-unstyled">
+
+                <% _.forEach(videos, function(el){ 
+                //console.log(el);
+                %>
+                    <li>
+                        <span class="bold"> keyword: </span> <%= el.keyword %> <span class="bold"> sent from: </span> <%= el.phoneNumber %> <span class="bold"> at: </span> <span class="time"><%= el.at %></span>
+                    </li>
+                <% }); %>
+
+            </ul>
+        </script>
+
+<script src="https://apis.google.com/js/client.js?onload=init"></script>
+
+        <script type="text/javascript">
+        var id = {{id}};
+        var pingedAt = (new Date()).getTime();
+        var playlistTemplate = _.template( $("#playlistTemplate").html() );
+        var lst = [];
+
+
+        $(document).ready(function() {
+
+            //console.log('inside init');
+            var initial_keywords = [];
+
+                $.getJSON("{{ url("event_info") }}", {id: id}, function(event){ /////UNHARDCODE
+                pingedAt = (new Date()).getTime();
+                //console.log(event);
+                var initial_keywords = event.keywords;
+                initial_keywords.reverse();
+
+                initial_keywords.forEach(function(song){
+                    song = addFormattedTimeToList(song);
+                    lst.push(song);
+                });
+
+                });
+
+                updatePlaylist();
+              
+                updateEvents();
+        });
+
+        function updatePlaylist(){
+
+            $("#playlist").html(playlistTemplate({videos: lst}));
+        }
+         // Update function to be called periodically
+    function updateEvents(){
+        // Get any keywords that have been submitted since our last update
+        $.getJSON("{{url("event_song_list")}}", {id: id, time: pingedAt}, function(list){ /////UNHARDCODE
+            pingedAt = (new Date()).getTime();
+                //list.reverse();
+
+                var searchableKeywords = _.filter(list, function(e){return e.isSearchable});
+
+                searchableKeywords.forEach(function(song){
+                    song = addFormattedTimeToList(song);
+                    lst.unshift(song);
+                });
+                updatePlaylist();
+                window.setTimeout(updateEvents, 3000); 
+            });
+            
+        }
+
+        function addFormattedTimeToList( searchObj ){ 
+
+        var d = new Date( searchObj.at );
+        var h, m;
+        
+        h = d.getHours();
+        m = d.getMinutes();
+
+        var ampm = h >= 12 ? 'pm' : 'am';
+
+        h = h % 12;
+        h = h ? h : 12; // the hour '0' should be '12'
+
+        m = m < 10 ? '0'+ m : m;
+
+        searchObj.playing = false;
+        searchObj.at = h + ":" + m + ampm;
+        
+        return searchObj;
+    }    
+        </script>
+
+<script type="text/javascript">
+var applicationID = '5E23B003';
+var namespace = 'urn:x-cast:com.setfive.jukebox';
+var session = null;
+
+if( typeof chrome != "undefined" ){
+    if (!chrome.cast || !chrome.cast.isAvailable) {
+        setTimeout(initializeCastApi, 1000);
+    
+    } else{
+        initializeCastApi();
+    }
+}else{
+    $("#chromecastLauncher").addClass("hidden");
+}
+  
+function initializeCastApi() {
+    var sessionRequest = new chrome.cast.SessionRequest(applicationID);
+    var apiConfig = new chrome.cast.ApiConfig(sessionRequest, sessionListener, receiverListener);
+    chrome.cast.initialize(apiConfig, null, onError);
+};
+
+function onError(e){
+    console.log('inside onError');
+    console.log(e);
+}
+
+function receiverListener(e) {
+    console.log(e);
+    if( e === 'available' ) {
+    console.log("receiver found");
+  }
+  else {
+    //console.log("receiver list empty");
+  }
+}
+
+
+function sessionListener(e) {
+    console.log('inside session listener');
+    session = e;
+    console.log(session);
+
+    session.addUpdateListener(sessionUpdateListener);  
+    session.addMessageListener(namespace, receiverMessage);
+    
+}
+
+function sendMessageToChromecast(id){ //New
+    console.log('Trying to send message to Chromecast');
+
+    messageBus = castReceiverManager.getCastMessageBus(
+    namespace,
+    cast.receiver.CastMessageBus.MessageType.STRING
+    );
+
+    messageBus.onMessage = function(event) {
+        var sender = event.senderId;
+        var message = event.data;
+    };
+
+    session.sendMessage(namespace, id, messageSuccess, messageFailure);
+}
+
+function messageSuccess(){ //New
+    console.log('was sent');
+}
+
+function messageFailure(){ //New
+    console.log('could not be sent');
+}
+
+function sessionUpdateListener(isAlive) {
+  var message = isAlive ? 'Session Updated' : 'Session Removed';
+  message += ': ' + session.sessionId;  
+  if (!isAlive) {
+    session = null;
+  }
+}
+
+ function receiverMessage(namespace, message) {
+    con.log("receiverMessage: " + namespace, message);
+  }
+
+
+function onRequestSessionSuccess(e) {
+        console.log("Successfully created session: " + e.sessionId);
+        session = e;
+}
+
+function onLaunchError() {
+        console.log("Error connecting to the Chromecast.");
+}
+
+$(document).ready(function(){
+    //console.log('in document ready');
+    
+    $("#startSession").click(function(){
+    
+        chrome.cast.requestSession(function(e){ 
+            session = e;
+            session.sendMessage(namespace, {type: "setEventId", data: id}, function(){
+                console.log( arguments );
+            });        
+        });
+        
+        return false;
+    });
+   
+});
+</script>
+
+{% endblock %}

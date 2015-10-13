@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Chrome Bell: Receiver</title>
+
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+	<link rel="stylesheet" href="styles.css">
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+	
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>		
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>	
+    <!--<script src="//www.gstatic.com/cast/sdk/libs/receiver/2.0.0/cast_receiver.js"></script> -->
+    <script src="underscore-min.js"></script>    
+  </head>
+  <body class="loading">
+  
+  <div class="loading-banner">
+    <div class="text-center">
+        <img src="loader.gif" />
+    </div>
+  </div>
+  
+  <div class="header-wrapper">
+	  <div class="container header-container" id="header"></div>
+  </div>
+  
+  <div class="body-container container">
+    <div class="col-md-4 guest-list-container">
+      <h3 class="header">Playlist</h3>
+      <div id="playlist"></div>
+    </div>
+    <div class="col-md-8">
+        <div id="playerContainer" class="text-center">
+            <h3>It looks like nothing is queued.</h3>
+        </div>
+    </div>
+  </div>    
+
+<script type="text/template" id="headerTemplate">
+    <div class="col-md-9">
+        <h1 class="title"><%= event.name %></h1>
+        <h2 class="sub-title"><%= event.quote %></h2>
+    </div>
+    <div class="col-md-3 text-right">
+        <h3 class="textnum">Text to: <span><%= event.number %></span></h3>          
+    </div>
+</script>
+
+<script type="text/template" id="playlistTemplate">
+<ul class="list list-unstyled">
+
+<% _.forEach(videos, function(el){ %>
+  <li class='<%= el.played ? 'played': '' %>'>
+    <span class="from"><%= el.sender %>:</span> <%= el.keyword %> <span class="time"><%= el.at %></span></li>
+<% }); %>
+
+</ul>
+
+</script>
+  
+<script>
+var eventId = "1";
+var pingedAt = null;
+
+var queuedVideos = [];
+var currentIndex = 0;
+
+var player = null;  
+var playlistTemplate = _.template( $("#playlistTemplate").html() );
+
+function updatePlaylist(){
+    var reversedArray = queuedVideos.slice();
+    reversedArray.reverse();
+    
+    $("#playlist").html( playlistTemplate({videos: reversedArray}) );
+}
+
+function playNextVideo(){
+    
+    queuedVideos[currentIndex].played = true;
+    
+    if( currentIndex < queuedVideos.length - 1 ){
+        currentIndex += 1;
+        
+        if( queuedVideos[currentIndex].videoId ){
+            player.loadVideoById( queuedVideos[currentIndex].videoId );
+            $.post('{{path('backend')}}',{'id':queuedVideos.id});
+
+        }
+        else{
+            currentIndex += 1;
+        }
+    }
+    
+    updatePlaylist();
+}
+
+function addToQueue( searchObj ){
+    
+    var d = new Date( searchObj.at );
+    var h, m, a;        
+        
+    if( d.getHours() > 12 ){
+        h = d.getHours() - 12;
+        a = "pm";
+    }else{
+        h = d.getHours();
+        a = "am";        
+    }
+    
+    if( d.getMinutes() < 10 ){
+        m = "0" + d.getMinutes();
+    }else{
+        m = d.getMinutes();
+    }
+    
+    searchObj.at = h + ":" + m + a;
+    searchObj.played = false;
+
+    queuedVideos.push( searchObj );
+    updatePlaylist();
+    
+    if(player == null){
+        var height = $("body").height() - $(".header-wrapper").height() - 60;
+	            
+        currentIndex = 0;
+	    player = new YT.Player('playerContainer', {
+	        height: '100%',
+	        width: '100%',
+	        videoId: queuedVideos[currentIndex].videoId,
+	        playerVars: {'autoplay': 1, 'controls': 0},
+	        events: {'onStateChange': onPlayerStateChange}
+        });
+	    
+    }
+    
+}
+
+function queueSearch( searchObj ){    
+    var request = gapi.client.youtube.search.list({q: searchObj.keyword, videoEmbeddable: true, part: 'snippet', type: 'video'});
+        
+    request.execute(function(response) {
+        searchObj.videoId = null;
+        if( response.result.items.length ){
+            searchObj.videoId = response.result.items[0].id.videoId;
+        }
+        
+        addToQueue( searchObj );
+    });    
+}
+
+function init(){
+    gapi.client.setApiKey("AIzaSyBpDjO4BtsuNJNou_ICN6UUMi5r2G6Nthw");
+    gapi.client.load('youtube', 'v3', startUpdatingEvents);
+}
+  
+function onYouTubeIframeAPIReady(){ }
+
+function onPlayerStateChange(event){
+    if( event.data == YT.PlayerState.ENDED ){
+        playNextVideo();
+    }
+}
+
+function startUpdatingEvents(){
+    updateEvents();
+    //window.setInterval(updateEvents, 1000);    
+}
+
+//skips get added to the DB by admins and the javascript uses their location in the queue to skip songs
+function updateEvents(){    
+    $.getJSON("http://localhost:8000/app_dev.php/event/2/list", function(list){
+        for(var i = 0; i < list.length; i++){
+            if(pingedAt == null || list[i].at > pingedAt){
+                console.log(list[i].keyword);
+                if(list[i].keyword.toLowerCase() == 'skip'){ //handeling if a skip has been added to the database
+                    playNextVideo();
+                }
+                else{
+                    queueSearch( list[i] );
+                    window.setTimeout(updateEvents, 1000); //this has been moved from startUpdatingEvents
+                }
+            }
+        }
+        
+        var d = new Date();
+        pingedAt = d.getTime();        
+    });   
+}
+
+$(document).ready(function(){
+    
+    window.castReceiverManager = cast.receiver.CastReceiverManager.getInstance();
+    window.messageBus = window.castReceiverManager.getCastMessageBus('urn:x-cast:com.setfive.jukebox');
+    window.castReceiverManager.start({statusText: "Application is starting"});
+    
+    $.getJSON("http://localhost:8000/app_dev.php/event/2/info", function(event){
+       var template = _.template( $("#headerTemplate").text() );       
+       $("#header").html( template({event: event}) );
+       $("body").removeClass("loading");
+    });
+        
+});
+
+</script>   
+  
+  <script src="https://apis.google.com/js/client.js?onload=init"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>   
+  </body>
+</html>

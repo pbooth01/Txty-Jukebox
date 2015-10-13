@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+	{% block content %}
+	<section class='event offset-header container'>
+	
+	 {% if flashes|length %}
+	   <div class="row" data-provide="slide-up">
+	     <div class="col-md-6 col-md-offset-3">
+	       <div class="alert alert-info text-center">{{ flashes }}</div>
+	     </div>
+	   </div>
+	 {% endif %}
+	
+      <div class="row">
+            
+          <div class="col-md-5 create-event-container">
+               <h3>Create an event</h3>
+               <form accept-charset="UTF-8" role="form" class="col-lg-12" action="" method ="post" novalidate>
+                 {{ form_widget(form)}}
+               </form>             
+           </div>      
+      	           
+          <div class="col-md-7">	        
+              
+              <div class="panel panel-default">
+                  <div class="panel-heading">My Events</div>
+                  <div class="panel-body event-container">                    
+                      
+                      <div class="text-center">
+                        <p>You'll be able to access the "launcher" for events that have started here.</p>
+                       </div>
+                       
+                      {% include "AppBundle:Default:_eventTable.html.twig" with {events: myEvents} %}                                                
+                  </div>                
+               </div>
+               	        
+          </div>
+                                
+       </div>
+   </section>
+
+    <script type="text/javascript">
+        $('#new_event_form_startTime').datetimepicker({
+            timeformat: "hh:mm tt"
+        });
+    </script> 
+ {% endblock %}

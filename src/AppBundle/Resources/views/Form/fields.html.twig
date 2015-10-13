@@ -1,0 +1,45 @@
+{% block datePicker_widget %}
+ 
+    {% stylesheets
+    "{{ asset('/bundles/app/css/jquery-ui-timepicker-addon.css') }}" 
+
+    %}
+    {% endstylesheets %}
+
+    {% javascripts
+
+        '/Resources/public/js/*' 
+        'js/timepicker-local/*'
+        output='js/compiled/jquerylib.js'
+    %}
+<![CDATA[
+    <script src="{{ asset_url }}"></script>
+    <script type="text/javascript">
+        jQuery(function($) {
+            // initialise the "Select date" link
+            $.datepicker.setDefaults($.datepicker.regional[ "it" ]);
+            $.timepicker.setDefaults($.timepicker.regional[ "it" ]);
+            // associate the link with a date picker
+            $('.fc_date_picker').each(function(){
+                var self = $(this);
+                self.datetimepicker({
+                    dateFormat:         'dd/mm/yy',
+                    timeFormat: 'hh:mm',
+                    changeMonth:        true,
+                    changeYear:         true,
+                    showButtonPanel:    true,
+                    firstDay:           1,
+                    showOn:             "button",
+                    buttonImageOnly:    true,
+                    buttonImage:        self.attr('data-datepicker-icon')
+                });
+            });
+        });
+    </script>
+    ]]>
+    {% endjavascripts %}
+ 
+ 
+    {{ form_widget(form) }}
+     
+{% endblock %}

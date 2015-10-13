@@ -1,0 +1,18 @@
+{% if events|length %}
+    <table class="table event-table">
+        {% for event in events %}
+            <tr> 
+                <td>{{ event.startTime.format('M. jS') }} 
+                    {{ event.startTime.format('g:ia') }} - 
+                    {{ event.endTime.format('M. jS') }} {{ event.endTime.format('g:ia') }}: {{ event.eventName }}</td>                 
+                   <td class="text-right">
+                     {% if event.isActive %}
+                        <a  id="event_launcer" class="btn btn-xs btn-primary" href="{{url('eventinfo', {'eventId': event.id})}}">Launch Event</a>
+                     {% else %}
+                        <span class="btn btn-success btn-xs"><span class="glyphicon glyphicon-ok"></span></span>
+                     {% endif %}
+                   </td>                
+            </tr>
+        {% endfor %}                                
+    </table>
+{% endif %}

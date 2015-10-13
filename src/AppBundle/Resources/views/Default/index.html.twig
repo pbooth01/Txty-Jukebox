@@ -1,0 +1,244 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+    <!-- ******PROMO****** -->
+    <section id="promo" class="promo section offset-header">
+        <div class="container">
+            <div class="col-md-12 text-center">
+	            <h2 class="title">Txty<span class="highlight">Jukebox</span></h2>
+	            <p class="intro">Allow your <span class="highlight">night</span> to be powered by the <span class="highlight">people</span> who matter most.</p>
+            </div>
+        </div><!--//container-->
+    </section><!--//promo-->
+    
+    <!-- ******ABOUT****** --> 
+    <section id="about" class="about section">
+        <div class="container">
+            
+            <div class="title-wrapper text-center">
+                <h2 class="title">So what is this thing?</h2>
+                <div class="sub-title">(Aside from awesome)</div>
+            </div>
+            
+            <div class="row about-row">
+              <div class="col-md-4">
+                <h3><span>1.</span> You create an event and we give you a phone number</h3>
+              </div>
+              <div class="col-md-4">
+                <h3><span>2.</span> People text in song requests to the number</h3>
+              </div>
+              <div class="col-md-4">
+                <h3><span>3.</span> Requests automagically queue up YouTube videos</h3>
+              </div>
+            </div>
+        </div>
+                        
+         <div class="best-part">
+            <div class="container">
+	            <div class="row">
+	              <div class="col-md-12 text-center">
+	                  <h3>And best part? If you have a Chromecast it'll play on your TV!</h3>
+	              </div>
+	            </div>
+            </div>
+         </div>            
+    </section><!--//about-->
+    
+     <div class="container screenshots-container">  
+         <div class="row">
+             <div class="col-md-12">
+                 <div data-ride="carousel" class="carousel slide screenshots" id="screenshots">
+                       <ol class="carousel-indicators">
+                         <li class="" data-slide-to="0" data-target="#screenshots"></li>
+                         <li data-slide-to="1" data-target="#screenshots" class=""></li>
+                         <li data-slide-to="2" data-target="#screenshots" class="active"></li>
+                       </ol>
+                       
+                       <div role="listbox" class="carousel-inner">
+                         <div class="item active">
+                           <img src="{{ asset('/bundles/app/images/TxtyImages/TxtyJukebox1.png') }}" 
+				class="img-responsive"
+                                data-holder-rendered="true">
+                         </div>
+                         <div class="item text-center">
+                           <img src="{{ asset('/bundles/app/images/TxtyImages/Textthread3.png') }}" 
+			        class="img-responsive"
+				data-holder-rendered="true">
+                         </div>
+                         <div class="item">
+                           <img src="{{ asset('/bundles/app/images/TxtyImages/placeit.jpg') }}" 
+				class="img-responsive"
+				data-holder-rendered="true">
+                         </div>
+                       </div>
+                       <a data-slide="prev" role="button" href="#screenshots" class="left carousel-control">
+                         <span aria-hidden="true" class="glyphicon glyphicon-chevron-left"></span>
+                         <span class="sr-only">Previous</span>
+                       </a>
+                       <a data-slide="next" role="button" href="#screenshots" class="right carousel-control">
+                         <span aria-hidden="true" class="glyphicon glyphicon-chevron-right"></span>
+                         <span class="sr-only">Next</span>
+                       </a>
+                 </div>                
+             </div>
+                          
+         </div><!--//row-->            
+     </div><!--//container-->    
+    
+    <!-- ******FEATURES****** --> 
+    <section id="features" class="features section">
+        <div class="container">
+            
+            <div class="row">
+	             <div class="col-md-12 testimonial-header text-center">
+	                 <h2 class="title">Nice things people are saying</h2>
+	             </div>            
+            </div>
+            
+            <div class="row testimonial-row">
+                <div class="col-md-5 col-md-offset-1">
+                    <div class="testimonial-wrapper">
+	                    <ul class="list-unstyled testimonial-container">
+	                        <li><img class="headshot" src="{{ asset('/bundles/app/images/headshot_1.png') }}" /></li>
+	                        <li>
+	                           You know that after party everyone loved? Yah those are always powered by <strong>TxtyJukebox</strong>!
+	                           <div class="quote-name"> - Ryan, Management Consultant, New York</div>                        
+	                        </li>
+	                    </ul>
+	                 </div>
+                </div>
+            </div>
+            
+            <div class="row testimonial-row">
+                <div class="col-md-5 col-md-offset-6">
+                    <div class="testimonial-wrapper">
+                        <ul class="list-unstyled testimonial-container">
+                            <li><img class="headshot" src="{{ asset('/bundles/app/images/headshot_2.png') }}" /></li>
+                            <li>
+                               The girls and I love using <strong>TxtyJukebox</strong> while we get ready. 
+                               No more sacrificing my phone to play music. 
+                               <div class="quote-name"> - Ashley, Social Chair TKO, Miami</div>                        
+                            </li>
+                        </ul>
+                     </div>
+                </div>            
+            </div>
+
+            <div class="row testimonial-row">
+                <div class="col-md-5 col-md-offset-1">
+                    <div class="testimonial-wrapper">
+                        <ul class="list-unstyled testimonial-container">
+                            <li><img class="headshot" src="{{ asset('/bundles/app/images/headshot_3.png') }}" /></li>
+                            <li>
+                               My favorite place to use <strong>TxtyJukebox</strong> is on a party bus! 
+                               Texting in song requests while cruising the city is the best.
+                               <div class="quote-name"> - Jackie, Duckboat Driver, Boston</div>                        
+                            </li>
+                        </ul>
+                     </div>
+                </div>
+            </div>
+                      
+            <div class="row testimonial-row">
+                <div class="col-md-5 col-md-offset-6">
+                    <div class="testimonial-wrapper">
+                        <ul class="list-unstyled testimonial-container">
+                            <li><img class="headshot" src="{{ asset('/bundles/app/images/headshot_4.png') }}" /></li>
+                            <li>
+                               Before a big night out my friends and I love using <strong>TxtyJukebox</strong> to watch funny YouTube clips.
+                               The "Donald Trump" drinking game is a fan favorite!
+                               <div class="quote-name"> - Sheldon, Ph.D Candidate, Los Angeles</div>                        
+                            </li>
+                        </ul>
+                     </div>
+                </div>            
+            </div>                      
+                      
+        </div><!--//container-->
+    </section><!--//features-->
+    
+    <!-- ******Demo****** -->
+    <section id="docs" class="docs section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 col-md-offset-2">
+                  <div class="shadow-container demo-container">
+	                    <div class="text-center">
+	                        <h2 class="title">Want to see it in action?</h2>
+	                        <label for="number-input">Enter <strong>your number</strong> and we'll create a "demo" event that you can text!</label>
+	                    </div>                
+	                    
+	                    <div class="row">
+                          <div class="error-message text-center alert alert-danger hidden"></div>
+	                        <div class="col-md-6 col-md-offset-3 tempevent-url">
+			                    <form id="number-submit" class="form-horizontal number-form" 
+			                      accept-charset="UTF-8" action="" method ="post" role="form">
+			                      <div class="form-group">		                        
+			                        <div class="col-md-9">
+			                          <input class="form-control input-lg" id="number-input" 
+			                                 type="text" name="hostNumber" placeholder="Ex. 617-867-5309">
+			                        </div>		          
+			                        <div class="col-md-3">            		                      
+			                          <input class="btn btn-primary btn-lg" type = "submit" value="Submit">
+			                        </div>
+			                      </div>                    
+			                    </form>
+		                    </div>
+		               </div>
+	             </div>
+                </div>            
+            </div>
+        </div>
+    </section>    
+
+    <div class="blue-spacer">
+        <div class="container">
+          <div class="row">
+            <div class="col-md-12 text-center">
+                <h3>Sold? Of course you are. Sign Up to create "live" events!</h3>
+            </div>
+          </div>
+        </div>
+     </div>
+
+    <!-- ******DOCS****** --> 
+    <section id="docs" class="docs section">
+        <div class="container">
+        
+            <div class="row">
+                <div class="col-md-8 col-md-offset-2">
+                  <div class="shadow-container">
+                    <h2 class="title">Get Started</h2>
+                    <p>Once you sign up, you'll be able to create events and launch the "player" interface</p>
+                    <form accept-charset="UTF-8" action="" method ="post" role="form">
+                        {{ form_widget(form1)}}
+                    </form>
+                  </div>
+                </div>
+             </div>            
+        </div><!--//container-->
+    </section><!--//features-->  
+
+<script type="text/javascript">
+
+$("#number-submit").submit(function(){ 
+  var number = $('#number-input').val();
+  $(".error-message").addClass("hidden");
+  number = number.replace(/\D/g,'');
+
+  if(number.length == 10 || number.length == 11){
+    $.post("{{url('tempevent')}}", {phonenumber: number}).done(function(data) {
+      $('#number-submit').addClass("text-center");
+      $('#number-submit').html("<a class='btn btn-sm btn-default' href='"+data+"'>Launch Your Temporary Event!</a>");
+    });
+  } else{
+    $(".error-message")
+            .html("Sorry! That isn't a valid phone number. We need a valid 10 digit number.")
+            .removeClass("hidden");
+  }
+
+  return false;
+}); 
+</script>      
+
+{% endblock %}

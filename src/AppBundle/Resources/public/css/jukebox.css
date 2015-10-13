@@ -1,0 +1,136 @@
+body {
+  font-family: 'Open Sans', sans-serif;
+  background: #111;
+  min-height: 100vh;
+}
+body.loading .loading-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+body.loading .header-wrapper,
+body.loading .body-container {
+  display: none;
+}
+.progress-container {
+  height: 150px;
+  width: 500px;
+}
+.sender-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+.loading-banner {
+  display: none;
+}
+.header-wrapper {
+  background-image: linear-gradient(#484e55, #3a3f44 60%, #313539);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.6);
+}
+.header-wrapper .title {
+  margin-bottom: 5px;
+  margin-top: 5px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #eee;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+}
+.header-wrapper .sub-title {
+  margin-top: 5px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #eee;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+}
+.header-wrapper .textnum {
+  color: #fff;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+  margin-top: 10px;
+}
+.header-wrapper .textnum span {
+  font-weight: bold;
+}
+.body-container {
+  background-color: #111;
+  margin-top: 30px;
+  padding: 0;
+}
+.body-container .player-iframe-container {
+  overflow: hidden;
+  color: #fff;
+}
+.body-container .left-container {
+  padding: 0;
+  overflow-y: hidden;
+}
+.body-container .left-container .help-container {
+  background-color: #353a41;
+  margin-bottom: 10px;
+  padding: 8px;
+  color: #ccc;
+  font-size: 12px;
+}
+.body-container .left-container .help-container .header {
+  margin: 0px;
+  font-size: 16px;
+}
+.body-container .left-container .help-container .demo-banner {
+  padding: 10px;
+  margin-top: 20px;
+  color: #fff;
+  background: linear-gradient(to bottom, #d90000 0%, #ff2d00 100%);
+  border-radius: 3px;
+  font-weight: bold;
+}
+.body-container .left-container .help-container ul {
+  margin: 0;
+  padding-left: 15px;
+}
+.body-container .left-container .help-container ul li {
+  padding-bottom: 5px;
+}
+.body-container .left-container .help-container ul li:last-child {
+  padding: 0;
+}
+.body-container .left-container .play-list-container .header {
+  background-color: #353a41;
+  color: #c8c8c8;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+}
+.body-container .left-container .play-list-container .playlist-element .keyword {
+  width: 80%;
+  overflow: hidden;
+}
+.body-container .left-container .play-list-container li {
+  padding: 10px;
+  background: #32383e;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+  color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+.body-container .left-container .play-list-container li:last-child {
+  border: 0;
+}
+.body-container .left-container .play-list-container li.played {
+  opacity: .4;
+}
+.body-container .left-container .play-list-container li.skipped {
+  text-decoration: line-through;
+}
+.body-container .left-container .play-list-container li.playing {
+  color: #f89406;
+}
+.body-container .left-container .play-list-container li .from {
+  font-weight: bold;
+}
+.body-container .left-container .play-list-container li .time {
+  color: #ccc;
+  position: absolute;
+  right: 10px;
+}
